@@ -1,0 +1,10 @@
+<div class="panel panel-default" ng-repeat="newsEntity in news">
+    <div class="panel-heading"><a ng-href="{{newsEntity.link}}">{{newsEntity.link}}</a></div>
+    <div class="panel-body">
+        {{newsEntity.title}}
+    </div>
+</div>
+
+<div class="search-now-panel">
+    <button class="btn btn-lg btn-primary" ng-click="searchNow()">Search now</button>
+</div>
