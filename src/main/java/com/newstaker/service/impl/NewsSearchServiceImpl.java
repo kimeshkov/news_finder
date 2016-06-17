@@ -5,6 +5,7 @@ import com.newstaker.domain.NewsMessage;
 import com.newstaker.domain.Source;
 import com.newstaker.repository.NewsMessageRepository;
 import com.newstaker.repository.SourceRepository;
+import com.newstaker.service.EmailService;
 import com.newstaker.service.NewsSearchService;
 import com.newstaker.service.RssMessageParser;
 import org.apache.commons.logging.Log;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 public class NewsSearchServiceImpl implements NewsSearchService {
     private static final Log log = LogFactory.getLog(NewsSearchServiceImpl.class);
+    private static final String JAVA_WORD = "java";
 
     @Autowired
     private NewsMessageRepository newsMessageRepository;
@@ -32,6 +34,9 @@ public class NewsSearchServiceImpl implements NewsSearchService {
 
     @Autowired
     private RssMessageParser rssMessageParser;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -47,8 +52,16 @@ public class NewsSearchServiceImpl implements NewsSearchService {
         for (Source source : getSourceUrls()) {
             messages.addAll(rssMessageParser.parseFromSourceUrl(source.getUrl()));
         }
+        List<NewsMessage> actualMessages = Lists.newArrayList(newsMessageRepository.save(getOnlyNewMessages(messages)));
 
-        return Lists.newArrayList(newsMessageRepository.save(getOnlyNewMessages(messages)));
+        for (NewsMessage actualMessage : actualMessages) {
+            if (actualMessage.getTitle().toLowerCase().contains(JAVA_WORD)) {
+                emailService.sendNewsMessage(actualMessage);
+            }
+        }
+
+        return actualMessages;
+
     }
 
     private List<NewsMessage> getOnlyNewMessages(List<NewsMessage> newsMessages) {
@@ -57,11 +70,7 @@ public class NewsSearchServiceImpl implements NewsSearchService {
     }
 
     private Iterable<Source> getSourceUrls() {
-
-        Source source = new Source();
-        source.setUrl("https://lenta.ru/rss/news");
-        return Lists.newArrayList(source);
-        //return sourceRepository.findAll();
+        return sourceRepository.findAll();
     }
 
     @Override
