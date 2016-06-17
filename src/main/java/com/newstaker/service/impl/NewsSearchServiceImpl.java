@@ -54,11 +54,8 @@ public class NewsSearchServiceImpl implements NewsSearchService {
         }
         List<NewsMessage> actualMessages = Lists.newArrayList(newsMessageRepository.save(getOnlyNewMessages(messages)));
 
-        for (NewsMessage actualMessage : actualMessages) {
-            if (actualMessage.getTitle().toLowerCase().contains(JAVA_WORD)) {
-                emailService.sendNewsMessage(actualMessage);
-            }
-        }
+        actualMessages.stream().filter(actualMessage -> actualMessage.getTitle().toLowerCase().contains(JAVA_WORD))
+                .forEach(actualMessage -> emailService.sendNewsMessage(actualMessage));
 
         return actualMessages;
 
